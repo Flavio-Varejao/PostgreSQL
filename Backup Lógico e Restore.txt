@@ -1,0 +1,91 @@
+Backup e Restore com Datapump
+
+- Backup Lógico
+
+  $ pg_dump [opção...] [nome do banco de dados]
+  
+Opções:
+
+-a Salva somente os dados, não salva o esquema (definições de dado). Esta opção só faz sentido para o formato texto puro.
+-c --clean Inclui comandos para remover (drop) os objetos do banco de dados antes dos comandos para criá-los. Esta opção só faz sentido para o formato texto-puro.
+-C --create Inicia a saída criando um banco de dados e se conecta ao banco criado. Esta opção só faz sentido para o formato texto-puro.
+-f <nome do arquivo> --file=<nome do arquivo> Envia a saída para o arquivo especificado. Se for omitido, é usada a saída padrão.
+-d dbname=<nome da base de dados> Nome da base de dados em que será feito o datapump.
+-F <formato> --format=<formato>
+p Gera um arquivo de script SQL no formato texto puro (padrão).
+t Gera um arquivo tar adequado para servir de entrada para o pg_restore.
+c Gera um arquivo personalizado adequado para servir de entrada para o pg_restore. Este é o formato mais flexível.
+-o --oids Salva os identificadores de objeto (OIDs) de todas as tabelas como parte dos dados. Esta opção deve ser usada quando a coluna OID é referenciada de alguma maneira (por exemplo, em uma restrição de chave estrangeira). Caso contrário, esta opção não deve ser usada.
+-S --schema-only Salva somente o esquema (definições dos dados), não os dados.
+-t <tabelas> --table=<tabela> Salva somente os dados da tabela.
+-v --verbose Especifica o modo verboso, fazendo o pg_dump colocar comentários detalhados sobre os objetos e os tempos de início/fim no arquivo de cópia de segurança, e mensagens de progresso na saída de erro padrão.
+Esta opção desativa a utilização do caractere cifrão ($) para delimitar o corpo das funções, obrigando a utilização da sintaxe para a cadeia de caracteres do padrão SQL.
+-U <nome do usuário> Conectar como o usuário especificado.
+
+- Configuração do Datapump
+
+  Definir a variável 'PGDATABASE' no bash_profile. A variável é a base de dados padrão do datapump.
+  Será utilizada se não for especificado o dbname no pg_dump.
+  
+  $ vim /var/lib/pgsql/.bash_profile
+	export PGDATABASE=postgres
+	
+  $ source /var/lib/pgsql/.bash_profile
+  
+- Datapump da base (full)
+
+  Script:
+  
+  $ pg_dump dbname=[nome da base de dados] > [caminho do dump/nome do arquivo.sql]
+  
+  ou
+  
+  Arquivo comprimido:
+  
+  $ pg_dump dbname=[nome da base de dados] --format=custom --file=/var/lib/pgsql/14/backups/Bkp_logico/Datapump_full_$(date +%d%m%Y).dmp
+
+- Dump de uma tabela
+
+  Script:
+
+  $ pg_dump -U postgres -t [owner.nome da tabela] > [caminho do dump/nome do arquivo.sql]
+  
+  Arquivo comprimido:
+  
+  $ pg_dump -U postgres -t [owner.nome da tabela] --format c -f [caminho do dump/nome do arquivo.dmp]
+  
+RESTORE
+  
+- Restaurar a base de um script SQL
+
+  $ psql [nome_do_banco_de_dados] < [arquivo_de_entrada]
+  
+  [nome_do_banco_de_dados]: É o nome do banco de dados a ser restaurado
+  [arquivo_de_entrada]: É um script SQL gerado pelo pg_dump
+  
+  O banco de dados não será criado pelo script, ele deve ser criado pelo DBA com createdb ou Create Database usando como modelo o template0.
+  Além disso, devem ser criados os usuários que são owner de objetos, caso se deseje mantê-los como proprietários, senão o proprietário será o usuário que fez a restauração.
+  Após a restauração, é recomendável executar o ANALYZE criando/atualizando as estatísticas para que o otimizador de consultas possa atuar de forma eficiente.
+  
+- Restaurar a base de um Dump comprimido
+
+  $ pg_restore [opção...] [nome_do_banco_de_dados]
+  
+  Se nome do banco de dados for especificado, ele se conectará ao banco e fará a restauração.
+  Se o nome não for especificado, ele irá gerar um script SQL que poderá ser executado para restaurar o banco igual à recuperação a partir do arquivo texto do pg_dump.
+  
+Opções:
+
+  -a Restaura apenas os dados, não o esquema (definições de dados).
+  -c --clean Descarta os objetos do banco de dados antes de recriá-los.
+  -C --create Cria o banco de dados antes de restaurá-lo.
+  -d <nome da base> dbname=<nome da base> Banco para fazer conexão. Se utilizado create, a conexão é realizada neste banco para poder criar o de restauração, caso contrário, restaura no banco de conexão.
+  -n <nome do schema> --schema=<nome do schema> Restaura apenas os objetos do esquema especificado.
+  -N <nome do schema> --exclude-schema=<nome do schema> Não restaura objetos que estão no esquema nomeado. Vários esquemas a serem excluídos podem ser especificados.
+  -S --schema-only Restaura apenas o esquema (definições de dados), não dados.
+  -t <nome da tabela> --table=<nome da tabela> Restaura apenas a definição e/ou dados da tabela especificada.
+  -U <nome do usuário> Conectar como o usuário especificado.
+
+
+
+

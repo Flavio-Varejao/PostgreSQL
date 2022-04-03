@@ -1,0 +1,90 @@
+Criação de usuário
+
+- Criar usuário
+
+  =# CREATE USER <nome do usuário> PASSWORD '<senha>';
+  
+  ou
+
+  =# CREATE ROLE <nome da role> LOGIN PASSWORD '<senha>';
+
+- Alterar a senha do usuário
+
+  =# ALTER USER <nome do usuário> PASSWORD '<nova senha>';
+
+  ou
+
+  =# ALTER ROLE <nome da role> LOGIN PASSWORD '<nova senha>';
+
+Criação de Roles
+
+- Criar uma role
+
+  =# CREATE ROLE <nome da role> [ [ WITH ] opção [ ... ] ];
+  
+- Listar as roles da base
+
+  =# \du
+
+  ou
+
+  select * from pg_roles;
+  
+- Criar uma role com atributos
+
+  Criar banco de dados
+
+  =# CREATE ROLE <nome da role> CREATEDB;
+  
+  Superusuário
+
+  =# CREATE ROLE <nome da role> SUPERUSER;
+  
+  Criar outras roles
+
+  =# CREATE ROLE <nome da role> CREATEROLE;
+  
+  Não herdar privilégios de outras roles
+
+  =# CREATE ROLE <nome da role> NOINHERIT;
+  
+  Fazer login no cluster
+
+  =# CREATE ROLE <nome da role> LOGIN;
+  
+  Replicar dados
+
+  =# CREATE ROLE <nome da role> REPLICATION;
+  
+  Role autenticada (usuário)
+
+  =# CREATE ROLE <nome da role> LOGIN PASSWORD '<senha>';
+  
+  Quantidade de conexões simultâneas
+
+  =# CREATE ROLE <nome da role> CONNECTION LIMIT '<número>';
+  
+  Data de validade para senha da role
+
+  =# CREATE ROLE <nome da role> VALID UNTIL '<data de validade>’;
+  
+- Atribuir role a outra role
+
+  =# GRANT <nome da role> TO <nome de outra role>;
+  
+- Alterar roles
+
+  =# ALTER ROLE <nome da role> [opção];
+  
+- Dropar roles
+
+  =# DROP ROLE <nome da role>;
+  
+  Para uma role poder ser removida, ela não pode ser dona (owner) de objetos de dados ou bases de dados.
+  
+
+  
+
+  
+
+  

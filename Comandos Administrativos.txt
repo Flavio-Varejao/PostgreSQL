@@ -1,0 +1,80 @@
+Comandos administrativos (RHEL7, OL7 e CentOS 7)
+
+- Conectar-se ao banco de dados
+
+Conexão local
+
+  $ psql (default postgres)
+
+  ou
+
+  $ psql -U <nome do usuário> -d <nome da base>
+
+Conexão remota
+
+  $ psql -h <endereço IP> -p 5432 -U <nome do usuário> -d <nome da base>
+
+Liberar acesso no servidor postgresql:
+
+  # su - postgres
+
+  $ cd $PGDATA
+
+  $ vim postgresql.conf
+    listen_addresses = '*' # Não fazer em produção!!
+
+  $ pg_ctl restart
+
+- Liberar acesso ao cluster para o usuário de banco
+
+Alterar a senha do usuário 'postgres':
+
+  $ psql
+
+  =# ALTER USER postgres PASSWORD '<senha>';
+
+  =# \q
+
+  $ vim pg_hba.conf
+
+  Para conexão local adicionar a linha:
+
+  # TYPE  DATABASE    USER        ADDRESS       METHOD
+
+    local     all     postgres                  md5
+
+  Para forçar o banco a pedir uma senha para o usuário, mudar
+  o método para 'md5' (senha com criptografia) em todas as linhas.
+
+- Reiniciar a configuração da base de dados
+
+  $ pg_ctl reload
+
+  ou
+
+  $ psql
+
+  =# SELECT pg_reload_conf();
+
+- Verificar configurações atuais da base de dados
+
+  $ psql
+
+  =# select name,setting from pg_settings;
+
+  ou
+
+  =# show <parametro>
+
+- Verificar o serviço postgresql
+
+  # systemctl status postgresql-<versão>
+
+- Resetar e-mail e senha do pgadmin4-web
+
+  # rm -rf /var/lib/pgadmin/pgadmin4.db
+
+  # /usr/pgadmin4/bin/setup-web.sh
+
+
+

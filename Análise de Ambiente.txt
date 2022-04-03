@@ -1,0 +1,117 @@
+Análise de Ambiente
+
+Linux:
+
+- Verificar recursos do servidor
+
+  # top (CPU, memória e processos)
+
+- Verificar recursos em intervalos de tempo
+
+  # vmstat 5 (a cada 5 segundos)
+
+- Verificar I/O no disco
+
+  # iostat -m 5 (a cada 5 segundos)
+
+  tps: é o número de operações de I/O por segundo.
+  MB_read/s e MB_wrtn/s: é volume de dados em MB, lidos e escritos por segundo, em média.
+  MB_read e MB_wrtn: é volume de dados lidos e escritos, desde a amostra anterior, no caso, a cada x segundos.
+
+Windows Server:
+
+- Verificar recursos do servidor
+
+  Gerenciador de tarefas (task manager)
+
+  Monitor de performance (performance monitor)
+
+Base de dados:
+
+- Listar colunas de tabelas
+
+  =# \d <nome da tabela>
+
+- Verificar tamanho da base de dados
+
+  =# select pg_size_pretty( pg_database_size( current_database() ) ) As human_size,
+  pg_database_size( current_database() ) As raw_size;
+
+-  Verificar tamanho de tablespaces
+
+  =# \db+
+
+  ou
+
+  =# select pg_size_pretty( pg_tablespace_size ( '<nome da tablespace>' )) As table_space_size;
+
+- Verificar quantidade de blocos lidos e escritos por segundo
+
+  =# select datid,blks_read,blks_hit,conflicts,deadlocks,blk_read_time,blk_write_time from pg_stat_database;
+
+- Verificar locks (bloqueios) mantidos por transações
+
+  =# select * from pg_locks;
+
+- Verificar informações de acesso a tabelas
+
+  =# select * from pg_stat_all_tables;
+
+- Verificar sessões e consultas dos usuários
+
+  =# select datid,datname,pid,usename,application_name,client_hostname,query from pg_stat_activity;
+
+- Verificar tamanho de tabelas
+
+  =# select
+        pg_size_pretty(pg_total_relation_size(relid)) as total_size,
+        pg_size_pretty(pg_relation_size(relid, 'main')) as relation_size_main,
+        pg_size_pretty(pg_relation_size(relid, 'fsm')) as relation_size_fsm,
+        pg_size_pretty(pg_relation_size(relid, 'vm')) as relation_size_vm,
+        pg_size_pretty(pg_relation_size(relid, 'init')) as relation_size_init,
+        pg_size_pretty(pg_table_size(relid)) as table_size,
+        pg_size_pretty(pg_total_relation_size(relid) - pg_relation_size(relid)) as external_size
+      from
+        pg_catalog.pg_statio_user_tables
+      where
+        schemaname = '<nome do schema>'
+      and relname like '<nome da tabela>';
+
+- Atualizar estatísticas das tabelas
+
+  =# ANALYZE VERBOSE [ tabela [ (coluna [, ...] ) ] ]
+
+  =# ANALYZE VERBOSE; (para todas as tabelas)
+
+  Configurar os parâmetros de estatísticas em 'postgresql.conf'
+
+- Limpeza da base de dados
+
+  =# VACUUM [ FULL | FREEZE ] [ VERBOSE ] [ tabela ]
+
+  =# VACUUM [ FULL | FREEZE ] [ VERBOSE ] ANALYZE [ tabela [ (coluna [, ...] ) ] ]
+
+O comando VACCUM  sem o 'FULL' permite o reúso do espaço em disco que era ocupado
+por uma tupla morta (dead tuples). Estas linhas cuja origem são as operações de DML
+(delete, update etc.) podem não ser mais necessárias quando todas as transações antigas
+que, eventualmente, as poderiam acessar, terminam.
+
+Opções:
+
+FULL: Realiza a limpeza completa liberando imediatamente o espaço em disco.
+
+FREEZE: Realiza um congelamento agressivo das tuplas. Quando selecionado FULL, o congelamento é realizado implícitamente.
+
+VERBOSE: Mostra, para cada tabela, um relatório detalhado da atividade de limpeza.
+
+ANALYZE: Se selecionado após o Vacuum, é realizada atualização das estatísticas utilizadas pelo planejador.
+
+Tabela: O nome (opcionalmente qualificado pelo esquema) da tabela específica a ser limpa. Por padrão, todas as tabelas do banco de dados corrente.
+
+Coluna: O nome da coluna a ser analisada, por padrão, todas as colunas.
+
+
+
+
+
+

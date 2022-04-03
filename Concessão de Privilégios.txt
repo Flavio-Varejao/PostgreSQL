@@ -1,0 +1,120 @@
+Concessão de Privilégios
+
+- Visualizar privilégios atribuidos a objetos
+
+  =# \z
+
+- Conceder privilégios em tabelas
+
+  =# GRANT { { SELECT | INSERT | UPDATE | DELETE | RULE | REFERENCES | TRIGGER }
+	 [...] | ALL [ PRIVILEGES ] }
+	 ON [ TABLE ] nome_da_tabela [, ...]
+	 TO { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...] [ WITH GRANT OPTION ];
+	
+- Conceder privilégios em bancos de dados
+
+  =# GRANT { { CREATE | TEMP } [,...] | ALL [ PRIVILEGES ] }
+     ON DATABASE nome_do_banco_de_dados [, ...]
+	 TO { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...] [WITH GRANT OPTION ];
+	 
+CREATE: Permite a criação de novos esquemas no banco de dados.
+TEMP:  Permite a criação de tabelas temporárias.
+
+- Conceder privilégios em funções
+
+  =# GRANT { EXECUTE | ALL [ PRIVILEGES ] }
+     ON FUNCTION nome_da_função ([tipo, ...]) [, ...]
+	 TO { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...] [ WITH GRANT OPTION ];
+	 
+- Conceder privilégios em linguagens
+
+  =# GRANT { USAGE | ALL [ PRIVILEGES ] }
+	 ON LANGUAGE nome_da_linguagem [, ...]
+	 TO { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...] [ WITH GRANT OPTION ];
+	 
+USAGE: Permite o uso da linguagem procedural especificada para criar funções.
+
+- Conceder privilégios em schemas
+
+  =# GRANT { { CREATE | USAGE } [,...] | ALL [ PRIVILEGES ] }
+	 ON SCHEMA nome_do_esquema [, ...]
+	 TO { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...] [ WITH GRANT OPTION ];
+	 
+CREATE: Permite a criação de novos objetos no esquema.
+USAGE: Permite ao usuário procurar por objetos dentro do esquema.
+
+- Conceder privilégios em tablespaces
+
+  =# GRANT { CREATE | ALL [ PRIVILEGES ] }
+	 ON TABLESPACE nome_do_espaço_de_tabelas [, ...]
+	 TO { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...] [ WITH GRANT OPTION ];
+	 
+CREATE: Permite a criação de objetos como tabelas, índices e banco de dados na tablespace.
+
+Revogação de Privilégios
+
+- Revogar privilégios em tabelas
+
+  =# REVOKE [ GRANT OPTION FOR ]
+     { { SELECT | INSERT | UPDATE | DELETE | RULE | REFERENCES | TRIGGER }
+	 [,...] | ALL [ PRIVILEGES ] } ON [ TABLE ] nome_da_tabela [, ...]
+	 FROM { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...]
+	 [ CASCADE | RESTRICT ];
+
+- Revogar privilégios em bancos de dados
+
+  =# REVOKE [ GRANT OPTION FOR ]
+     { { CREATE | TEMPORARY | TEMP } [,...] | ALL [ PRIVILEGES ] }
+	 ON DATABASE nome_do_banco_de_dados [, ...]
+	 FROM { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...]
+	 [ CASCADE | RESTRICT ];
+	 
+- Revogar privilégios em funções
+
+  =# REVOKE [ GRANT OPTION FOR ]
+	 { EXECUTE | ALL [ PRIVILEGES ] }
+	 ON FUNCTION nome_da_função ([tipo, ...]) [, ...]
+	 FROM { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...]
+	 [ CASCADE | RESTRICT ];
+	 
+- Revogar privilégios em linguagens
+
+  =# REVOKE [ GRANT OPTION FOR ]
+	 { USAGE | ALL [ PRIVILEGES ] }
+	 ON LANGUAGE nome_da_linguagem [, ...]
+	 FROM { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...]
+	 [ CASCADE | RESTRICT ];
+	 
+- Revogar privilégios em schemas
+
+  =# REVOKE [ GRANT OPTION FOR ]
+	 { { CREATE | USAGE } [,...] | ALL [ PRIVILEGES ] }
+	 ON SCHEMA nome_do_esquema [, ...]
+	 FROM { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...]
+	 [ CASCADE | RESTRICT ];
+	 
+- Revogar privilegios em tablespaces
+
+  =# REVOKE [ GRANT OPTION FOR ]
+	 { CREATE | ALL [ PRIVILEGES ] }
+	 ON TABLESPACE nome_do_espaço_de_tabelas [, ...]
+	 FROM { nome_do_usuário | GROUP nome_do_grupo | PUBLIC } [, ...]
+	 [ CASCADE | RESTRICT ]
+	 
+	 
+Exemplos:
+
+Revogar todas as permissões de uma role para dropá-la:
+
+=# revoke all on all tables in schema <nome do schema> from <nome da role>;
+=# revoke all on schema <nome do schema> from <nome da role>;
+=# revoke all on database <nome da base> from <nome da role>;
+=# drop role <nome da role>;
+
+
+
+  
+  
+  
+  
+  

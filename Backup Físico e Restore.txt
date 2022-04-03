@@ -1,0 +1,142 @@
+Backup Físico e Restore
+
+- Cópia de Segurança contínua
+
+1. Criar uma partição para armazenar os archives do cluster
+
+  De preferência que seja em outro disco
+
+  O owner do diretório deve ser o usuário postgres
+
+  # chown -R postgres:postgres /Archives/
+
+2. Configurar o modo de arquivameto do WAL
+
+  # su - postgres
+  
+  $ cd $PGDATA
+
+  $ vim postgresql.conf
+	
+  wal_level = [opção] 
+  Deve ser definido como 'archive' ou 'hot_standby' (postgresql 9.3), 'replica' ou 'higher' (postgresql 14), pois a duas permitem o arquivamento do log.
+  
+  Após essa alteração será necessário reiniciar o serviço do postgresql com 'pg_ctl restart'
+  
+  archive_mode = on 
+  Precisa estar ligado para podermos executar o comando de arquivamento.
+  
+  archive_command = ['texto'] 
+  Onde texto deve ser um comando de cópia de arquivos do sistema operacional. Exemplo:  
+  archive_command = 'test ! -f /mnt/server/archivedir/%f && cp %p /mnt/server/archivedir/%f'  # Unix
+  archive_command = 'copy "%p" "C:\\server\\archivedir\\%f"'  # Windows
+
+  Para interromper temporariamente o archivamento pode-se deixar a string vazia ''. 
+  Após essa alteração será necessário reiniciar a configuração do cluster com 'pg_ctl reload'
+
+  archive_timeout = 600
+  Esta configuração é importante para que o tempo de uma possível perda de dados possa ser limitado a esta quantidade de segundos.
+  
+  Se todos os parâmetros acima foram alterados. Concluir a cofiguração com:
+
+  $ pg_ctl restart
+  
+- Backup Básico 
+
+  $ pg_basebackup [ opções...]
+
+  Em um servidor remoto:
+
+  $ pg_basebackup -h 10.0.2.15 -p 5432 -U postgres -D /Backups -Ft -z -l "This backup was created at $(hostname) on $(date)" 
+
+Opções:
+
+  -D <diretório>, --pgdata=<diretório> Diretório para gravar a saída. O pg_basebackup criará o diretório e quaisquer diretórios pai, se necessário. O diretório já pode existir, mas é um erro se o diretório já existir e não estiver vazio. Esta opção é obrigatória.
+
+  -F <formato>, --format=<formato> Seleciona o formato para a saída. Podendo ser: plain ou tar
+
+  p, plain Escreve a saída como arquivos simples, com o mesmo layout que o diretório de dados e as tablespaces atuais. Esse é o formato padrão.
+  
+  t, tar Escreva a saída como arquivos tar no diretório de destino.
+
+  -l "<texto>" Adiciona um rótulo ao backup atual
+
+  -z Compressão tar com gzip
+
+  -Z, --compress=0-9 Habilita nível de compressão
+
+  -U <nome do usuário>, --username 
+
+- Backup Manual (Non-Exclusive Low Level Backup)
+
+  Permite que outros backups simultâneos sejam executados (tanto os iniciados usando a mesma API de backup quanto os iniciados usando pg_basebackup). Requisitos:
+
+  1. Ativar o modo de arquivamento do WAL
+
+  2. Conectar-se em qualquer base com o usuário com direitos para executar 'pg_start_backup' (superusuário ou um usuário que recebeu EXECUTE na função)
+
+  # su - postgres
+
+  $ psql -c "SELECT pg_start_backup('label', false, false);" postgres
+
+Parâmetros:
+
+  label (1º parâmetro): é qualquer string que você deseja usar para identificar exclusivamente essa operação de backup. A chamada de conexão 'pg_start_backup' deve ser mantida até o final do backup, ou o backup será abortado automaticamente.
+
+  false (2º parâmetro): Minimiza o impacto no processamento de consultas. Se você deseja iniciar o backup o mais rápido possível, altere o segundo parâmetro para true, que emitirá um ponto de verificação imediato usando o máximo de I/O disponível.
+
+  false (3º parâmetro): O terceiro parâmetro sendo false diz ao pg_start_backup para iniciar um backup básico não exclusivo.
+
+Executar o backup, usando qualquer ferramenta de backup de sistema de arquivos conveniente, como 'tar' ou 'cpio' (não pg_dump ou pg_dumpall). Não é necessário nem desejável interromper a operação normal do banco de dados enquanto você faz isso.
+
+  $ tar -C /var/lib/pgsql/data/ -czvf /var/lib/pgsql/backups/basebackupfilename.tar.gz .
+
+  $ psql -c "SELECT * FROM pg_stop_backup(false, true);" postgres
+
+- Recuperação do cluster
+
+COnfigurar o 
+
+1. Pare o servidor, se estiver em execução.
+
+2. Se você tiver espaço para fazer isso, copie todo o diretório de dados do cluster e todos os tablespaces para um local temporário, caso precise deles mais tarde. Observe que essa precaução exigirá que você tenha espaço livre suficiente no sistema para armazenar duas cópias do banco de dados existente. Se você não tiver espaço suficiente, você deve pelo menos salvar o conteúdo do pg_walsubdiretório do cluster, pois ele pode conter logs que não foram arquivados antes da queda do sistema.
+
+3. Remova todos os arquivos e subdiretórios existentes no diretório de dados do cluster e nos diretórios raiz de qualquer tablespace que estiver usando.
+
+4. Restaure os arquivos de banco de dados do backup do sistema de arquivos. Certifique-se de que eles sejam restaurados com a propriedade correta (o usuário do sistema de banco de dados, não root!) e com as permissões corretas. Se estiver usando tablespaces, verifique se os links simbólicos pg_tblspc/foram restaurados corretamente.
+
+5. Remova todos os arquivos presentes em pg_wal/; eles vieram do backup do sistema de arquivos e, portanto, provavelmente são obsoletos e não atuais. Se você não arquivou pg_wal/ nada, recrie-o com as permissões apropriadas, tomando cuidado para garantir que você o restabeleça como um link simbólico se você o configurou dessa maneira antes.
+
+6. Se você tiver arquivos de segmento WAL desarquivados que você salvou na etapa 2, copie-os em pg_wal/. (É melhor copiá-los, não movê-los, para que você ainda tenha os arquivos não modificados se ocorrer um problema e você tiver que começar de novo.)
+
+7. Defina as configurações de recuperação em postgresql.conf (consulte a Seção 20.5.4 ) e crie um arquivo recovery.signalno diretório de dados do cluster. Você também pode modificar temporariamente pg_hba.confpara impedir que usuários comuns se conectem até ter certeza de que a recuperação foi bem-sucedida.
+
+8. Inicie o servidor. O servidor entrará no modo de recuperação e prosseguirá com a leitura dos arquivos WAL arquivados necessários. Caso a recuperação seja encerrada devido a um erro externo, o servidor pode simplesmente ser reiniciado e continuará a recuperação. Após a conclusão do processo de recuperação, o servidor será removido recovery.signal(para evitar a reinserção acidental do modo de recuperação posteriormente) e, em seguida, iniciará as operações normais do banco de dados.
+
+9. Inspecione o conteúdo do banco de dados para garantir que você recuperou para o estado desejado. Caso contrário, volte para a etapa 1. Se tudo estiver bem, permita que seus usuários se conectem restaurando pg_hba.confao normal.
+
+Documentação:
+
+https://www.postgresql.org/docs/current/continuous-archiving.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  
+
+
+
+  

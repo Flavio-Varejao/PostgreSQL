@@ -1,0 +1,55 @@
+Criação de Schemas
+
+- Criar um schema
+
+  =# CREATE SCHEMA <nome do schema>;
+  
+  =# CREATE SCHEMA <nome do schema> [ AUTHORIZATION <nome do usuário> ] [ <elemento do schema> [ ... ] ]
+  
+Onde:
+
+<nome do schema>: Define o nome do esquema que será criado. 
+Observe que o nome não pode começar por pg_, porque estes nomes são reservados para os esquemas do sistema.
+
+<nome do usuário>: O nome do usuário que será o dono do esquema (owner). Se for omitido, tem como padrão o usuário que está executando o comando.
+
+<elemento do schema>: Um comando SQL definindo um objeto a ser criado no esquema.
+
+- Listar os schemas da base de dados
+
+  =# \dn
+  
+- Listar schemas e suas tabelas
+
+  =# \dt
+  
+- Verificar o caminho de procura
+
+  =# SHOW search_path;
+
+- Adicionar um schema ao caminho de procura
+
+  =# SET search_path TO public, <nome do schema>;
+  
+  No comando acima o schema 'public' é local de criação padrão para todos os novos objetos do banco de dados
+  e é o primeiro a ser consultado para encontrar um objeto quando o owner não é especificado.
+
+- Renomeear um schema
+
+  =# ALTER SCHEMA <nome do schema> RENAME TO <novo nome>;
+
+- Aletrar o owner do schema
+
+  =# ALTER SCHEMA <nome do schema> OWNER TO <novo owner>;
+
+- Dropar um schema
+
+  =# DROP SCHEMA <nome do schema> [, ...] [ CASCADE | RESTRICT ]
+
+Onde:
+
+<nome do schema>: nome do esquema.
+CASCADE: apaga automaticamente os objetos do esquema.
+RESTRICT: não apaga o esquema se ele contiver algum objeto. É o padrão.
+
+  

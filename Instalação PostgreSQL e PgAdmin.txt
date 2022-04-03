@@ -1,0 +1,125 @@
+Instalar o PostgreSQL no Servidor Linux
+
+- Instalar o servidor do banco de dados
+
+  Linux (RHEL, CentOS, Debian, Oracle Linux, SUSE, Ubuntu Server)
+
+- Atualizar os pacotes
+
+  # yum update (RHEL 7, CentOS 7, Oracle Linux 7, versões antigas)
+
+  # dnf update (RHEL 8, CentOS 8, Oracle Linux 8, versões mais novas)
+
+  # apt upgrade (Debian, Ubuntu Server)
+
+- Configurar o IP estático
+
+  # ls /etc/sysconfig/network-scripts/
+
+	# vim /etc/sysconfig/network-scripts/<arquivo ifcfg>
+
+  # vim /etc/hosts
+
+- Desabilitar o SELINUX
+
+  # vim /etc/selinux/config
+  selinux=disabled
+
+- Instalar o PostgreSQL
+
+Seguir o passo a passo:
+
+  https://www.postgresql.org/download/
+
+- Verificar o status do serviço
+
+  # systemctl status postgresql-<versão>
+
+- Editar o arquivo '.bash_profile'
+
+  # su - postgres
+
+  $ vim .bash_profile
+
+  Adicionar a linha referente aos binários
+
+  Exemplo:
+
+  export PATH:/usr/pgsql-12/bin
+
+  $ source .bash_profile
+
+- Instalar o pgAdmin (RPM)
+
+Seguir o passo a passo:
+
+Instalar a versão completa (desktop e web)
+
+  https://www.pgadmin.org/download/pgadmin-4-rpm/
+
+- Verificar o acesso
+
+  http://127.0.0.1/pgadmin4
+
+Se tiver algum erro no acesso pelo browser, seguir com a configuração abaixo.
+
+#################################################################################
+
+Atenção!!! Seguir com essa configuração somente se tiver problemas com o acesso ao pgadmin!
+
+- Renomear o arquivo de configuração
+
+  # ls -l /etc/httpd/conf.d
+
+  # mv /etc/httpd/conf.d/pgadmin4.conf.sample /etc/httpd/conf.d/pgadmin4.conf
+
+- Criar os diretórios
+
+  # mkdir -p /var/lib/pgadmin4/
+
+  # mkdir -p /var/log/pgadmin4/
+
+  # chown -R apache:apache /var/lib/pgadmin4
+
+  # chown -R apache:apache /var/log/pgadmin4
+
+- Configurar os diretórios
+
+  # vim /usr/lib/python2.7/site-packages/pgadmin4-web/config_distro.py
+      LOG_FILE='/var/log/pgadmin4/pgadmin4.log'
+      SQLITE_PATH='/var/lib/pgadmin4/pgadmin4.db'
+      SESSION_DB_PATH='/var/lib/pgadmin4/sessions'
+      STORAGE_DIR='/var/lib/pgadmin4/storage'
+
+- Criar as credenciais
+
+  # python /usr/lib/python2.7/site-packages/pgadmin4-web/setup.py
+
+- Verificar o status e iniciar caso down
+
+  # systemctl status httpd
+
+  # systemctl start httpd
+
+- Testar o pgadmin4
+
+  http://localhost/pgadmin4
+
+- Caso a página não esteja disponível, configurar o SELINUX
+
+  # chcon -t httpd_sys_rw_content_t /var/log/pgadmin4 -R
+
+  # chcon -t httpd_sys_rw_content_t /var/lib/pgadmin4 -R
+
+- Dar a permissão correta
+
+  # chown -R apache:apache /var/lib/pgadmin4
+
+  # chown -R apache:apache /var/log/pgadmin4
+
+- Validar o pgadmin4
+
+  http://localhost/pgadmin4
+
+###############################################################################
+

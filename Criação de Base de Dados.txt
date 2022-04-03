@@ -1,0 +1,58 @@
+Criação de Base de Dados
+
+- Criar uma base de dados
+
+  =# CREATE DATABASE <nome>;
+
+  Padrão:
+
+  =# CREATE DATABASE "<nome>"
+        WITH
+        OWNER = postgres
+        TEMPLATE = template1
+        ENCODING = 'UTF8'
+        TABLESPACE = pg_default
+        CONNECTION LIMIT = -1;
+
+  O banco modelo deve estar inativo (sem usuários conectados) e de preferência seja somente de leitura e não sofra alterações.
+
+- Mudar o idioma da base de dados
+
+  $ initdb --locale=<idioma> (en-US, pt_BR, etc)
+
+- Mudar o formato de moeda
+
+  $ initdb --locale=<idioma> – lc-monetary=<formato de moeda>
+
+- Verificar as bases no cluster
+
+  =# SELECT oid, datname FROM pg_database;
+
+- Verificar se a base é um template e se permite conexão
+
+  =# SELECT oid, datname, datistemplate, datallowconn from pg_database;
+
+- Deletar a base de dados
+
+  =# DROP DATABASE <nome>;
+
+  Deletar uma base a partir de outra base
+
+- Renomear base de dados
+
+  =# ALTER DATABASE <nome> RENAME TO <novo_nome>;
+
+- Alterar o proprietário da base
+
+  =# ALTER DATABASE <nome> OWNER TO <novo_dono>;
+
+- Alterar configurações da sessão de variáveis de tempo de execução
+
+Válido somente para a sessão atual
+
+  =# DATABASE <nome> SET <parâmetro> { TO | = } { valor | DEFAULT }
+
+  =# DATABASE <nome> RESET <parâmetro>
+
+
+

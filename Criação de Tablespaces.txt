@@ -1,0 +1,41 @@
+Criação de Tablespaces
+
+- Criar tablespaces
+
+  =# CREATE TABLESPACE <nome da tablespace> [OWNER <nome do usuário>] LOCATION '<diretório>';
+  
+<nome da tablespace>: O nome do espaço de tabelas a ser criado, sendo que não deve começar com pg_, já que este prefixo 
+é reservado para as tablespaces do sistema.
+
+<nome do usuário>: Nome do proprietário da tablespace. Se omitido, o proprietário será o usuário que executou o comando.
+
+<diretório>: O local no disco onde a tablespace será criada. Deverá ser um diretório vazio e pertencente ao usuário de sistema do PostgreSQL. 
+Deve ser especificado como um caminho absoluto.
+
+- Dropar uma tablespace
+
+  =# DROP TABLESPACE <nome da tablespace>;
+  
+- Listar tablespaces
+
+  =# \db
+
+- Configurar tablespace padrão
+
+  =# SET default_tablespace = <nome da tablespace>;
+  
+  Essa é a tablespace que será utilizada quando não for especificado na criação de um objeto
+
+- Criar uma tabela em uma tablespace
+
+  =# CREATE TABLE <nome da tabela>(id int) TABLESPACE <nome da tablespace>;
+  
+- Renomear uma tablespace
+
+  =# ALTER TABLESPACE <nome da tablespace> RENAME TO <novo nome>;
+  
+- Alterar o owner da tablespace
+
+  =# ALTER TABLESPACE <nome da tablespace> OWNER TO <novo owner>;
+
+  
