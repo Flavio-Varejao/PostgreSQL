@@ -95,26 +95,75 @@ Executar o backup, usando qualquer ferramenta de backup de sistema de arquivos c
 
 - Recuperação do cluster
 
-COnfigurar o 
-
 1. Pare o servidor, se estiver em execução.
 
-2. Se você tiver espaço para fazer isso, copie todo o diretório de dados do cluster e todos os tablespaces para um local temporário, caso precise deles mais tarde. Observe que essa precaução exigirá que você tenha espaço livre suficiente no sistema para armazenar duas cópias do banco de dados existente. Se você não tiver espaço suficiente, você deve pelo menos salvar o conteúdo do pg_walsubdiretório do cluster, pois ele pode conter logs que não foram arquivados antes da queda do sistema.
+  # systemctl stop postgresql-12
+
+2. Se você tiver espaço para fazer isso, copie todo o diretório de dados do cluster e todos os tablespaces para um local temporário, caso precise deles mais tarde. Observe que essa precaução exigirá que você tenha espaço livre suficiente no sistema para armazenar duas cópias do banco de dados existente. Se você não tiver espaço suficiente, você deve pelo menos salvar o conteúdo do pg_wal do cluster, pois ele pode conter logs que não foram arquivados antes da queda do sistema.
+
+  $ su - postgres
+
+  $ cp -rv /var/lib/pgsql/12/data/pg_wal /mnt/Archives/pg_wal
 
 3. Remova todos os arquivos e subdiretórios existentes no diretório de dados do cluster e nos diretórios raiz de qualquer tablespace que estiver usando.
 
-4. Restaure os arquivos de banco de dados do backup do sistema de arquivos. Certifique-se de que eles sejam restaurados com a propriedade correta (o usuário do sistema de banco de dados, não root!) e com as permissões corretas. Se estiver usando tablespaces, verifique se os links simbólicos pg_tblspc/foram restaurados corretamente.
+  $ rm -rf /var/lib/pgsql/12/data/*
 
-5. Remova todos os arquivos presentes em pg_wal/; eles vieram do backup do sistema de arquivos e, portanto, provavelmente são obsoletos e não atuais. Se você não arquivou pg_wal/ nada, recrie-o com as permissões apropriadas, tomando cuidado para garantir que você o restabeleça como um link simbólico se você o configurou dessa maneira antes.
+4. Restaure os arquivos de banco de dados do backup do sistema de arquivos. Certifique-se de que eles sejam restaurados com a propriedade correta (o usuário do sistema de banco de dados, não root!) e com as permissões corretas. Se estiver usando tablespaces, verifique se os links simbólicos pg_tblspc/ foram restaurados corretamente.
+
+  $ cd /var/lib/pgsql/12/backups/Bkp_fisico/<diretorio>
+
+  $ tar -xzvf base.tar.gz -C /var/lib/pgsql/12/data/
+
+5. Remova todos os arquivos presentes em pg_wal/; eles vieram do backup do sistema de arquivos e, portanto, provavelmente são obsoletos e não atuais. Se você não arquivou nada do pg_wal/ recrie-o com as permissões apropriadas, tomando cuidado para garantir que você o restabeleça como um link simbólico se você o configurou dessa maneira antes.
+
+  $ cd /var/lib/pgsql/12/data/pg_wal
+
+  $ rm <archives>
 
 6. Se você tiver arquivos de segmento WAL desarquivados que você salvou na etapa 2, copie-os em pg_wal/. (É melhor copiá-los, não movê-los, para que você ainda tenha os arquivos não modificados se ocorrer um problema e você tiver que começar de novo.)
 
-7. Defina as configurações de recuperação em postgresql.conf (consulte a Seção 20.5.4 ) e crie um arquivo recovery.signalno diretório de dados do cluster. Você também pode modificar temporariamente pg_hba.confpara impedir que usuários comuns se conectem até ter certeza de que a recuperação foi bem-sucedida.
+  $ cp -rv /mnt/Archives/pg_wal/* /var/lib/pgsql/12/data/pg_wal/
 
-8. Inicie o servidor. O servidor entrará no modo de recuperação e prosseguirá com a leitura dos arquivos WAL arquivados necessários. Caso a recuperação seja encerrada devido a um erro externo, o servidor pode simplesmente ser reiniciado e continuará a recuperação. Após a conclusão do processo de recuperação, o servidor será removido recovery.signal(para evitar a reinserção acidental do modo de recuperação posteriormente) e, em seguida, iniciará as operações normais do banco de dados.
+7. Defina as configurações de recuperação em postgresql.conf (consulte a Seção 20.5.4 ) e crie um arquivo recovery.signal no diretório de dados do cluster. Você também pode modificar temporariamente pg_hba.conf para impedir que usuários comuns se conectem até ter certeza de que a recuperação foi bem-sucedida.
 
-9. Inspecione o conteúdo do banco de dados para garantir que você recuperou para o estado desejado. Caso contrário, volte para a etapa 1. Se tudo estiver bem, permita que seus usuários se conectem restaurando pg_hba.confao normal.
+  $ cd /var/lib/pgsql/12/data/
 
+  $ vim pg_hba.conf
+  Adicionar a linha:
+    host          all           all          all         reject
+
+  $ vim postgresql.conf
+  Editar:
+    restore_command = 'cp /mnt/Archive/postgres/%f "%p"'
+    restore_command = 'copy "C:\\server\\archivedir\\%f" "%p"'  # Windows
+
+  $ touch recovery.signal
+
+  $ chmod 600 recovery.signal
+
+8. Inicie o servidor. O servidor entrará no modo de recuperação e prosseguirá com a leitura dos arquivos WAL arquivados necessários. Caso a recuperação seja encerrada devido a um erro externo, o servidor pode simplesmente ser reiniciado e continuará a recuperação.  Após a conclusão do processo de recuperação, o servidor removerá o recovery.signal (para evitar a reentrada acidental no modo de recuperação posteriormente) e, em seguida, iniciará as operações normais do banco de dados.
+
+  $ su - root
+
+  # systemctl start postgresql-12
+
+  # systemctl status postgresql-12
+
+9. Inspecione o conteúdo do banco de dados para garantir que você recuperou para o estado desejado. Caso contrário, volte para a etapa 1. Se tudo estiver bem, permita que seus usuários se conectem restaurando pg_hba.conf ao normal.
+
+  $ su - postgres
+
+  $ pg_ctl status
+
+  $ vim pg_hba.conf
+  Apagar a linha:
+    host          all           all          all         reject
+
+  $ psql
+
+  =# \l
+  
 Documentação:
 
 https://www.postgresql.org/docs/current/continuous-archiving.html
