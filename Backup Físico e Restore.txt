@@ -13,6 +13,16 @@ Backup Físico e Restore
 2. Configurar o modo de arquivameto do WAL
 
   # su - postgres
+
+  $ psql -U postgres -d <nome da base>
+
+- Verificar se está em modo archived
+
+  =# show archive_mode;
+
+  =# show archive_command;
+
+  =# exit;
   
   $ cd $PGDATA
 
@@ -21,7 +31,7 @@ Backup Físico e Restore
   wal_level = [opção] 
   Deve ser definido como 'archive' ou 'hot_standby' (postgresql 9.3), 'replica' ou 'higher' (postgresql 14), pois a duas permitem o arquivamento do log.
   
-  Após essa alteração será necessário reiniciar o serviço do postgresql com 'pg_ctl restart'
+  Após essa alteração será necessário reiniciar o serviço do postgresql com 'pg_ctl restart -D $PGDATA'
   
   archive_mode = on 
   Precisa estar ligado para podermos executar o comando de arquivamento.
@@ -39,9 +49,23 @@ Backup Físico e Restore
   
   Se todos os parâmetros acima foram alterados. Concluir a cofiguração com:
 
-  $ pg_ctl restart
+  $ pg_ctl restart -D $PGDATA
+
+  $ pg_ctl status -D $PGDATA
+
+- Verificar se foi modificado
+
+  $ psql -U postgres -d <nome da base>
+
+  =# show archive_mode;
+
+  =# show archive_command;
+
+  =# show wal_level;
+
+  =# exit;
   
-- Backup Básico 
+3. Backup Básico 
 
   $ pg_basebackup [ opções...]
 
