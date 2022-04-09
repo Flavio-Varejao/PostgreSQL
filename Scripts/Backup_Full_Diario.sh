@@ -5,8 +5,8 @@ export DATE=$(date +%d%m%Y)
 export PGDATA=/var/lib/pgsql/12/data
 export PATH=$PATH:/usr/pgsql-12/bin
 export BKPBASE=/var/lib/pgsql/12/backups/Bkp_fisico/
-export BKPDIR="$BKPBASE"/PostgreSQL_Base_Backup_"$DATE"
-export LOG="$BKPBASE"/logs/PostgreSQL_Base_Backup_"$DATE".log
+export BKPDIR="$BKPBASE"/"$DATE"
+export LOG="$BKPBASE"/logs/"$DATE".log
 export PGPASSWORD="postgres2022"
 
 echo -e "\n\nBackup Status: "$(date +"%d-%m-%y")"" > "$LOG"
@@ -22,7 +22,7 @@ echo -e "\nEnd Time: "$(date)"" >> "$LOG"
 #Auto Deletion for Backups
 #Value 7 for retention will keep 8 days backups
 RETENTION=7
-find "$BKPBASE"/PostgreSQL_Base_Backup* -type d -mtime +"$RETENTION" -exec rm -rv {} \;
+find "$BKPBASE"/* -type d -mtime +"$RETENTION" -exec rm -rv {} \;
 
 # Opções do comando 'pg_basebackup'
 # -w Não exige a senha na execução do comando
